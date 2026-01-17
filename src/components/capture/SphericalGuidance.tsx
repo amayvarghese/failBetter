@@ -53,7 +53,8 @@ const Targets: React.FC<{ targets: CaptureTarget[]; nearestId: number | null }> 
 export const SphericalGuidance: React.FC<Props> = ({ deviceQuaternion, targets, nearestTargetId }) => {
     return (
         <Canvas
-            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
+            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', background: 'transparent' }}
+            gl={{ alpha: true }}
             camera={{ position: [0, 0, 0], fov: 75 }}
         >
             <ambientLight />
