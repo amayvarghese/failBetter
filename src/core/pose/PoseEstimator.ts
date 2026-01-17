@@ -1,10 +1,7 @@
-import { CapturedFrame } from "../capture/useCaptureSession";
+import type { CapturedFrame } from "../capture/useCaptureSession";
 
 // We need a way to load the worker.
 // In Vite: new Worker(new URL('../../workers/cv.worker.ts', import.meta.url), { type: 'classic' })
-// 'classic' is needed for importScripts to work relatively easily, but 'module' is standard.
-// If using 'module', importScripts is not available, we use correct imports.
-// But OpenCV.js is a big UMD file. 'classic' + importScripts is safest for big libs.
 
 export class PoseEstimator {
     private worker: Worker;
@@ -15,7 +12,7 @@ export class PoseEstimator {
         this.worker = new Worker(new URL('../../workers/cv.worker.ts', import.meta.url), { type: 'classic' });
 
         this.worker.onmessage = (e) => {
-            const { type, id, result, error } = e.data;
+            const { id, result, error } = e.data;
             if (this.callbacks.has(id)) {
                 if (error) console.error("Worker Error:", error);
                 this.callbacks.get(id)?.(result);
@@ -52,13 +49,14 @@ export class PoseEstimator {
                 if (!ctx) return reject("No Context");
 
                 ctx.drawImage(img, 0, 0);
+                // const imageData = ctx.getImageData(0, 0, img.width, img.height);
+                // We are not using imageData in the worker anymore? 
+                // Wait, previous replace might have messed up worker usage or I am inconsistent.
+                // In worker I expect payload.image as ImageData.
                 const imageData = ctx.getImageData(0, 0, img.width, img.height);
 
-                this.callbacks.set(id, (result) => resolve(result));
+                this.callbacks.set(id, (result: any) => resolve(result));
 
-                // Transferable? ImageData creates a copy usually or we assume structured clone.
-                // We should transfer the buffer if possible but ImageData buffer is read-only sometimes?
-                // Just postMessage for now.
                 this.worker.postMessage({ type: 'detectFeatures', payload: { image: imageData }, id });
             };
             img.src = frame.imageUrl;

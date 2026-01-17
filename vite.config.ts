@@ -3,10 +3,19 @@ import react from '@vitejs/plugin-react'
 import basicSsl from '@vitejs/plugin-basic-ssl'
 
 // https://vite.dev/config/
-export default defineConfig({
-  plugins: [react(), basicSsl()],
-  server: {
-    host: true, // Listen on all addresses
-    https: true
+export default defineConfig(({ command }) => {
+  const plugins = [react()];
+
+  // Only use basicSsl in development
+  if (command === 'serve') {
+    // @ts-expect-error Plugin type mismatch in safe mode
+    plugins.push(basicSsl());
   }
+
+  return {
+    plugins,
+    server: {
+      host: true,
+    }
+  };
 })
