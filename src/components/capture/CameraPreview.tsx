@@ -7,6 +7,18 @@ interface Props {
 }
 
 export const CameraPreview: React.FC<Props> = ({ videoRef, error, isLoading }) => {
+    // Debug: Check if video is actually playing?
+    const [debugInfo, setDebugInfo] = React.useState<string>("");
+
+    React.useEffect(() => {
+        const v = videoRef.current;
+        if (!v) return;
+        const interval = setInterval(() => {
+            setDebugInfo(`${v.videoWidth}x${v.videoHeight} State:${v.readyState} Paused:${v.paused}`);
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [videoRef]);
+
     return (
         <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', zIndex: 0, background: '#222' }}>
             {error && (
@@ -14,6 +26,11 @@ export const CameraPreview: React.FC<Props> = ({ videoRef, error, isLoading }) =
                     Camera Error: {error}
                 </div>
             )}
+
+            <div style={{ position: 'absolute', top: 5, right: 5, color: '#0f0', zIndex: 999, fontSize: '10px' }}>
+                Video: {debugInfo}
+            </div>
+
             {/* Video element fills screen */}
             <video
                 ref={videoRef}
@@ -25,7 +42,8 @@ export const CameraPreview: React.FC<Props> = ({ videoRef, error, isLoading }) =
                     width: '100%',
                     height: '100%',
                     objectFit: 'cover',
-                    display: isLoading ? 'none' : 'block'
+                    display: isLoading ? 'none' : 'block',
+                    border: '2px solid red', // Debug border
                 }}
             />
             {isLoading && (

@@ -20,22 +20,34 @@ export function useCamera() {
 
         async function initCamera() {
             try {
-                // Try environment camera first
-                const constraints: MediaStreamConstraints = {
-                    audio: false,
-                    video: {
-                        facingMode: { ideal: 'environment' },
-                        width: { ideal: 1920 },
-                        height: { ideal: 1080 }
-                    }
-                };
-
-                console.log('Requesting camera with constraints:', constraints);
-                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                let stream: MediaStream;
+                try {
+                    // Try ideal environment first (relaxed from exact)
+                    const constraints: MediaStreamConstraints = {
+                        audio: false,
+                        video: {
+                            facingMode: { ideal: 'environment' },
+                            width: { ideal: 1920 },
+                            height: { ideal: 1080 }
+                        }
+                    };
+                    console.log('Requesting camera with constraints:', constraints);
+                    stream = await navigator.mediaDevices.getUserMedia(constraints);
+                } catch (e) {
+                    console.warn("Ideal environment camera failed, trying fallback", e);
+                    // Fallback to basic video
+                    stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                }
 
                 if (mounted) {
                     if (videoRef.current) {
                         videoRef.current.srcObject = stream;
+                        // Explicit play
+                        try {
+                            await videoRef.current.play();
+                        } catch (e) {
+                            console.error("Auto-play failed", e);
+                        }
                     }
                     setState({ stream, error: null, isLoading: false });
                 }
